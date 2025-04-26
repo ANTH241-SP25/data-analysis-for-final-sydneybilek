@@ -1,29 +1,315 @@
 ---
-title: "data_analysis"
+title: "Data Analysis"
+author: "Sydney Bilek"
+date: "2025-04-17"
 output: html_document
-date: "2025-04-15"
 ---
-Replace this empty file with your data analysis .rmd file we created and started working on 04/15 in class! To do this go to your data cleaning file in R studio:
-File >> Save As >> Github >> data_analysis[yourname] (folder created by Github) >> final_project
+
+1. Descriptive statistics of continuous variables
 ```{r}
-#this file is meant to be empty
+#Mean, median, and range
+mean(NHANES_Research$BMI, na.rm=TRUE)
+median(NHANES_Research$BMI, na.rm=TRUE)
+range(NHANES_Research$BMI, na.rm=TRUE)
+
+mean(NHANES_Research$Sedentary, na.rm=TRUE)
+median(NHANES_Research$Sedentary, na.rm=TRUE)
+range(NHANES_Research$Sedentary, na.rm=TRUE)
 ```
-## R Markdown
+The mean BMI in the data set is 29.75 (overweight). The median BMI is 28.5 (also overweight). The range of the BMIs is from 14.8 to 86.2.
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+The mean number of minutes spent sedentary is 332.24 minutes (minimally sedentary). The median number of sedentary minutes is 300 minutes (also minimally sedentary). The range of the minutes is from 0 to 1,320 minutes.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r}
+#descriptive statistics using summary()
+BMI_sum<-c("BMI")
+summary(NHANES_Research[BMI_sum])
 
-```{r cars}
-summary(cars)
+Sedentary_sum<-c("Sedentary")
+summary(NHANES_Research[Sedentary_sum])
+```
+(The means, medians, and ranges are the same as described above.) The median of the lower half of BMI is 24.60 (healthy) while the median of the upper half is 33.50 (obese).
+
+The median of the lower half of minutes spent sedentary is 180 minutes (least sedentary) while the median of the upper half is 480 (moderately sedentary).
+
+```{r}
+#Mean, standard deviation, and count
+NHANES_Research%>%
+  drop_na(BMI)%>%
+  summarize(mean(BMI), sd(BMI), count=n())
+
+NHANES_Research%>%
+  drop_na(Sedentary)%>%
+  filter(Sedentary<1321)%>%
+  summarize(mean(Sedentary), sd(Sedentary), count=n())
+```
+For BMI, the standard deviation is +/-7.45 from the mean 29.75 out of 4,676 individuals.
+
+For minutes spend sedentary, the standard deviation is +/-198.58 minutes from the mean 332.24 out of 4,676 individuals.
+
+```{r}
+#Mean, standard deviation, and count by DepressionLvl
+NHANES_Research%>%
+  group_by(DepressionLvl)%>%
+  drop_na(BMI)%>%
+  summarize(mean(BMI),sd(BMI),count=n())
+
+NHANES_Research%>%
+  group_by(DepressionLvl)%>%
+  drop_na(Sedentary)%>%
+  filter(Sedentary<1321)%>%
+  summarize(mean(Sedentary),sd(Sedentary),count=n())
+```
+The mean BMI for those who reported having no depression is 29.51 (overweight), with a standard deviation of +/-7.27 out of 3,570 individuals. The mean BMI for those who reported having depression on several days is 30.41 (obese), with a standard deviation of +/-7.94 out of 766 individuals.The mean BMI for those who reported having depression more than half the days is 31.33 (obese), with a standard deviation of +/-8.52 out of 197 individuals. The mean BMI for those who reported having depression nearly every day is 30.12 (obese), with a standard deviation of +/-7.41 out of 139 individuals.
+
+The mean minutes spent sedentary for those who reported having no depression is 330.93 minutes (least sedentary), with a standard deviation of +/-195.61 out of 3,570 individuals. The mean minutes spent sedentary for those who reported having depression on several days is 331.55 (least sedentary), with a standard deviation of +/-198.19 out of 766 individuals.The mean minutes spent sedentary for those who reported having depression more than half the days is 336.27 (least sedentary), with a standard deviation of +/212.72 out of 197 individuals. The mean minutes spent sedentary for those who reported having depression nearly every day is 365.25 (least sedentary), with a standard deviation of +/-249.15 out of 139 individuals.
+
+2. Descriptive statistics: Charts for nominal, ordinal, and continuous variables
+
+Nominal/ordinal variables
+```{r}
+#DepressionLvl
+ggplot(NHANES_Research, aes(x=DepressionLvl))+geom_bar(fill ="gray")+labs(title="Level of depression", x="Response chosen", y="Counts (number of individuals)")
+
+DepressionLvl_table<-with(NHANES_Research, table(DepressionLvl))
+prop.table(DepressionLvl_table)
+prop.table(DepressionLvl_table)*100
+DepressionLvl_barchart<-as.data.frame(prop.table(DepressionLvl_table)*100)
+ggplot(DepressionLvl_barchart, aes(DepressionLvl, Freq))+geom_col()
+
+#Gender
+ggplot(NHANES_Research, aes(x=Gender))+geom_bar(fill ="gray")+labs(title="Gender of participants", x="Response chosen", y="Counts (number of individuals)")
+
+Gender_table<-with(NHANES_Research, table(Gender))
+prop.table(Gender_table)
+prop.table(Gender_table)*100
+Gender_barchart<-as.data.frame(prop.table(Gender_table)*100)
+ggplot(Gender_barchart, aes(Gender, Freq))+geom_col()
+
+#Race
+ggplot(NHANES_Research, aes(x=Race))+geom_bar(fill ="gray")+labs(title="Race of participants", x="Response chosen", y="Counts (number of individuals)")
+
+Race_table<-with(NHANES_Research, table(Race))
+prop.table(Race_table)
+prop.table(Race_table)*100
+Race_barchart<-as.data.frame(prop.table(Race_table)*100)
+ggplot(Race_barchart, aes(Race, Freq))+geom_col()
+
+#HealthAccess
+ggplot(NHANES_Research, aes(x=HealthAccess))+geom_bar(fill ="gray")+labs(title="Access to healthcare", x="Response chosen", y="Counts (number of individuals)")
+
+HealthAccess_table<-with(NHANES_Research, table(HealthAccess))
+prop.table(HealthAccess_table)
+prop.table(HealthAccess_table)*100
+HealthAccess_barchart<-as.data.frame(prop.table(HealthAccess_table)*100)
+ggplot(HealthAccess_barchart, aes(HealthAccess, Freq))+geom_col()
+
+#MonthFamInc
+ggplot(NHANES_Research, aes(x=MonthFamInc))+geom_bar(fill ="gray")+labs(title="Monthly Family Income (in $)", x="Response chosen", y="Counts (number of individuals)")
+
+MonthFamInc_table<-with(NHANES_Research, table(MonthFamInc))
+prop.table(MonthFamInc_table)
+prop.table(MonthFamInc_table)*100
+MonthFamInc_barchart<-as.data.frame(prop.table(MonthFamInc_table)*100)
+ggplot(MonthFamInc_barchart, aes(MonthFamInc, Freq))+geom_col()
 ```
 
-## Including Plots
+Nominal/ordinal variable grouped by another nominal/ordinal variable
+```{r}
+#Gender by Depression Lvl
+table(NHANES_Research$Gender, NHANES_Research$DepressionLvl)
+ggplot(NHANES_Research, aes(x=DepressionLvl, fill=Gender)) +geom_bar(position="dodge") +labs(title="grouped bar chart",x="Depression level", y="Frequency")
 
-You can also embed plots, for example:
+#Race by Depression Lvl
+table(NHANES_Research$Race, NHANES_Research$DepressionLvl)
+ggplot(NHANES_Research, aes(x=DepressionLvl, fill=Race)) +geom_bar(position="dodge") +labs(title="grouped bar chart",x="Depression level", y="Frequency")
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+#HealthAccess by Depression Lvl
+table(NHANES_Research$HealthAccess, NHANES_Research$DepressionLvl)
+ggplot(NHANES_Research, aes(x=DepressionLvl, fill=HealthAccess)) +geom_bar(position="dodge") +labs(title="grouped bar chart",x="Depression level", y="Frequency")
+
+#MonthFamInc by Depression Lvl
+table(NHANES_Research$MonthFamInc, NHANES_Research$DepressionLvl)
+ggplot(NHANES_Research, aes(x=DepressionLvl, fill=MonthFamInc)) +geom_bar(position="dodge") +labs(title="grouped bar chart",x="Depression level", y="Frequency")
+
+#BMIcat by Depression Lvl
+table(NHANES_Research$BMIcat, NHANES_Research$DepressionLvl)
+ggplot(NHANES_Research, aes(x=DepressionLvl, fill=BMIcat)) +geom_bar(position="dodge") +labs(title="grouped bar chart",x="Depression level", y="Frequency")
+
+#Sedentarycat by Depression Lvl
+table(NHANES_Research$Sedentarycat, NHANES_Research$DepressionLvl)
+ggplot(NHANES_Research, aes(x=DepressionLvl, fill=Sedentarycat)) +geom_bar(position="dodge") +labs(title="grouped bar chart",x="Depression level", y="Frequency")
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Continuous variables
+```{r}
+#Bar charts with means and sd
+BMI_DepressionLvl<-NHANES_Research%>%
+  drop_na(BMI)%>%
+  group_by(DepressionLvl)%>%
+  summarize(n=n(),mean=mean(BMI), sd=sd(BMI))
+BMI_DepressionLvl
+ggplot(BMI_DepressionLvl, aes(x=reorder(DepressionLvl, mean),y=mean)) +geom_bar(stat="identity", fill="gray")+geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=0.2)
+labs(x="mean BMI by Depression level",
+     y="", 
+     title="Mean BMI", 
+     subtitle="with standard deviation")
+
+Sedentary_DepressionLvl<-NHANES_Research%>%
+  drop_na(Sedentary)%>%
+  group_by(DepressionLvl)%>%
+  summarize(n=n(),mean=mean(Sedentary), sd=sd(Sedentary))
+Sedentary_DepressionLvl
+ggplot(Sedentary_DepressionLvl, aes(x=reorder(DepressionLvl, mean),y=mean)) +geom_bar(stat="identity", fill="gray")+geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=0.2)
+labs(x="mean Sedentary by Depression level",
+     y="", 
+     title="Mean Sedentary", 
+     subtitle="with standard deviation")
+
+#Histograms
+ggplot(NHANES_Research, aes(x=BMI))+
+  geom_histogram()+labs(title="histogram of BMI")
+ggplot(NHANES_Research, aes(x=BMI))+geom_histogram(bins=20,color="white",fill="gray")+labs(title="Colored histogram with 20 bins", x="BMI", y="count")
+ggplot(NHANES_Research, aes(x=BMI, y=..density..))+geom_histogram(bins=20, color="white", fill="gray")+scale_y_continuous(labels=scales::percent)+ labs(title="BMI", y="percent", x="BMI")
+
+ggplot(NHANES_Research, aes(x=Sedentary))+
+  geom_histogram()+labs(title="histogram of Sedentary")
+ggplot(NHANES_Research, aes(x=Sedentary))+geom_histogram(bins=20,color="white",fill="gray")+labs(title="Colored histogram with 20 bins", x="Sedentary", y="count")
+ggplot(NHANES_Research, aes(x=Sedentary, y=..density..))+geom_histogram(bins=20, color="white", fill="gray")+scale_y_continuous(labels=scales::percent)+ labs(title="Sedentary", y="percent", x="Sedentary")
+
+#Box plots
+ggplot(NHANES_Research, aes(y=BMI)) + geom_boxplot() + labs(y="BMI", x="", title="Box Plot")
+ggplot(NHANES_Research, aes(y=Sedentary)) + geom_boxplot() + labs(y="Time spent sedentary in minutes", x="", title="Box Plot")
+
+ggplot(NHANES_Research, aes(x=DepressionLvl, y=BMI)) + 
+  geom_boxplot(fill="gray") + labs(x="Depression level", y="BMI", title="BMI")
+ggplot(NHANES_Research, aes(x=DepressionLvl, y=Sedentary)) + 
+  geom_boxplot(fill="gray") + labs(x="Depression level", y="Sedentary", title="Time spent sedentary in minutes")
+```
+
+3. T-tests
+```{r}
+NHANES_Research%>%
+  drop_na(BMI)%>%
+  group_by(Gender)%>%
+  summarize(mean(BMI), sd(BMI), count=n())
+hist(NHANES_Research$BMI)
+var.test(BMI~Gender, data=NHANES_Research, alternative="two.sided")
+t.test(BMI~Gender, var.equal=TRUE, data=NHANES_Research)
+```
+Null hypothesis: There is no difference between BMI and gender.
+Alternative hypothesis: BMI varies by gender.
+
+The t-value of the test is -4.607. The negative means the sample mean is smaller than the hypothesized mean, which is evidence against the null hypothesis. Additionally, since the t-value is large and the p-value is small (4.194e-06 is less than 0.05), then there is statistically significant difference and there is stronger evidence against the null hypothesis.
+
+```{r}
+NHANES_Research%>%
+  drop_na(Sedentary)%>%
+  group_by(Gender)%>%
+  summarize(mean(Sedentary), sd(Sedentary), count=n())
+hist(NHANES_Research$Sedentary)
+var.test(Sedentary~Gender, data=NHANES_Research, alternative="two.sided")
+t.test(Sedentary~Gender, var.equal=TRUE, data=NHANES_Research)
+```
+Null hypothesis: There is no difference between minutes spent sedentary and gender.
+Alternative hypothesis: Minutes spent sedentary varies by gender.
+
+The t-value of the test is 0.60256. The t-value is small and the p-value is large (0,5468 is greater than 0.05), so there is not a statistically significant difference and there is not strong evidence against the null hypothesis.
+
+4. Kruskal-Wallis/Dunn test
+```{r}
+ggplot(NHANES_Research,aes(x=DepressionLvl,y=BMI))+geom_boxplot(fill="gray")+labs(x="Depression level", y="BMI", title="BMI by Depression level")
+dunn.test(x=NHANES_Research$BMI, g=NHANES_Research$DepressionLvl, kw=TRUE)
+```
+Alternative hypothesis: BMI differs by depression levels.
+Null hypothesis: BMI does not vary by depression levels.
+
+There is a significant difference between the BMI of those who are depressed more than half the days and not at all. All other group comparisons are not statistically significant.
+
+```{r}
+dunn.test(x=NHANES_Research$Sedentary, g=NHANES_Research$DepressionLvl, kw=TRUE)
+```
+There is no significant difference between any of the categories.
+
+5. Chi-squared tests (two categorical variables)
+```{r}
+MonthFamInc_DepressionLvl_table<-xtabs(~MonthFamInc+DepressionLvl,data=NHANES_Research)
+MonthFamInc_DepressionLvl_table
+prop.table(MonthFamInc_DepressionLvl_table)*100
+
+chisq.test(MonthFamInc_DepressionLvl_table)
+```
+The p-value is lower than 0.05 (5.447e-10), which means there is a significant correlation between levels of family income and depression levels.
+
+```{r}
+BMIcat_DepressionLvl_table<-xtabs(~BMIcat+DepressionLvl,data=NHANES_Research)
+BMIcat_DepressionLvl_table
+prop.table(BMIcat_DepressionLvl_table)*100
+
+chisq.test(BMIcat_DepressionLvl_table)
+```
+The p-value is lower than 0.05 (0.0001819), which means there is a significant correlation between BMI categories and depression levels.
+
+```{r}
+Sedentarycat_DepressionLvl_table<-xtabs(~Sedentarycat+DepressionLvl,data=NHANES_Research)
+Sedentarycat_DepressionLvl_table
+prop.table(Sedentarycat_DepressionLvl_table)*100
+
+chisq.test(Sedentarycat_DepressionLvl_table)
+```
+The p-value is lower than 0.05 (0.001927), which means there is a significant correlation between levels of sedentary physical activity categories and depression levels.
+
+```{r}
+Race_DepressionLvl_table<-xtabs(~Race+DepressionLvl,data=NHANES_Research)
+Race_DepressionLvl_table
+prop.table(Race_DepressionLvl_table)*100
+
+chisq.test(Race_DepressionLvl_table)
+```
+The p-value is lower than 0.05 (7.346e-06), which means there is a significant correlation between race and depression levels.
+
+```{r}
+Gender_DepressionLvl_table<-xtabs(~Gender+DepressionLvl,data=NHANES_Research)
+Gender_DepressionLvl_table
+prop.table(Gender_DepressionLvl_table)*100
+
+chisq.test(Gender_DepressionLvl_table)
+```
+The p-value is lower than 0.05 (6.678e-08), which means there is a significant correlation between race and depression levels.
+
+6. Correlation test
+```{r}
+ggplot(aes(x=BMI, y=Sedentary), data=NHANES_Research) +
+  geom_point(color="gray") +
+  geom_smooth(method=lm, color="black") +
+  labs(x="BMI", y="Time sedentary in minutes") +
+  theme_bw()
+
+cor.test(NHANES_Research$BMI, NHANES_Research$Sedentary, method="pearson")
+```
+Null hypothesis: There is no correlation between BMI and sedentary physical activity.
+Alternative hypothesis: There is a positive correlation between BMI and sedentary physical activity.
+
+The Pearson correlation coefficient is 0.11, which is close to no correlation. The p-value is 1.969e-14, which is smaller than 0.05, which does still make it statistically significant. The observed correlation might not be strong enough to be reliable or useful in predicting or understanding the relationship between the two variables.
+
+7. Linear regression model
+```{r}
+BMI_Sedentary_fit <- lm(BMI~Sedentary, data=NHANES_Research)
+summary(BMI_Sedentary_fit)
+```
+The linear regression equation for this model is BMI=2.836e+01+SD(4.188e-03).
+The multiple R-squared value for this equation is 0.012, which is close to 0 and means that 1.2% of the variance in the data is explained by the model, which indicates no relationship between the variables.The p-value 1.969e-14, which is less than 0.05 and means that the R-squared value is statistically significant. While the p-value indicates the result is statistically significant, the R-squared value is so weak so weak that it indicates the variance in the dependent variable (BMI) is not accurately explained by the independent variable (sedentary physical activity). There is a lack of information to explain this variance.
+
+8. Odds ratios
+```{r}
+NHANES_Research$HealthAccessYN[NHANES_Research$HealthAccess==1] <- "Yes"
+NHANES_Research$HealthAccessYN[NHANES_Research$HealthAccess==2] <- "No"
+factor(c(NHANES_Research$HealthAccessYN, levels=c("No", "Yes")))
+head(NHANES_Research)
+
+DepressionLvl_HealthAccess_odds_table <- table(NHANES_Research$DepressionLvl, NHANES_Research$HealthAccessYN)
+oddsratio(DepressionLvl_HealthAccess_odds_table)
+
+DepressionLvl_Gender_odds_table <- table(NHANES_Research$DepressionLvl, NHANES_Research$Gender)
+oddsratio(DepressionLvl_Gender_odds_table)
+```
